@@ -1,5 +1,5 @@
 {
-  "name": "easy-worker",
+  "name": "@ngocro208/easy-worker",
   "version": "0.1.0",
   "description": "A lightweight library to create Web Workers from inline functions without needing a separate file, with TypeScript support.",
   "type": "module",
@@ -11,6 +11,9 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
@@ -21,7 +24,8 @@
     "clean": "rimraf dist",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "release": "bun run build && npm publish"
   },
   "keywords": [
     "web worker",
@@ -32,7 +36,6 @@
     "background",
     "thread"
   ],
-  "author": "Ro Vo Ngoc <ngocro208@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
