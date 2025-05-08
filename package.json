@@ -15,7 +15,9 @@
     "build": "tsc",
     "test": "echo \"Error: no test specified yet\" && exit 0",
     "lint": "echo \"Error: no linter specified yet\" && exit 0",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "run-example": "bun run examples/another.ts",
+    "build:browser": "esbuild src/index.ts --bundle --outfile=dist/easy-worker.browser.js --format=iife --global-name=easyWorker"
   },
   "keywords": [
     "web worker",
@@ -36,7 +38,8 @@
     "url": "https://github.com/imrovn/easy-worker/issues"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "esbuild": "^0.25.4"
   },
   "peerDependencies": {
     "typescript": "^5"

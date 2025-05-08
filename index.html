@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Worker Vanilla JS Test</title>
+    <!-- Assuming easy-worker is built into a browser-friendly format -->
+    <!-- Option 1: If you build a UMD/IIFE bundle -->
+    <script src="./dist/easy-worker.browser.js"></script> <!-- Adjust path as needed -->
+    <!-- Option 2: If you build as ES Module and use type="module" for your test script -->
+    <!-- <script type="module" src="test-script.js"></script> -->
+    <!-- For simplicity, let's assume IIFE/UMD exposing easyWorker global -->
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; }
+        .log-entry { border-bottom: 1px solid #eee; padding: 5px 0; }
+        .log-entry.error { color: red; }
+        .log-entry.success { color: green; }
+        .log-entry.info { color: blue; }
+    </style>
+</head>
+<body>
+<h1>Easy Worker Vanilla JS Test Page</h1>
+<p>Open the browser console to see detailed logs and worker messages.</p>
+<div id="logs"></div>
+
+<script>
+    // Ensure the "pre-Bun" version of worker-script.ts is used in the build of easy-worker.browser.js
+    const outputLog = (message, type = 'info') => {
+        console[type === 'error' ? 'error' : 'log'](message);
+        const logContainer = document.getElementById('logs');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${type.toUpperCase()}] ${typeof message === 'object' ? JSON.stringify(message) : message}`;
+        logContainer.appendChild(entry);
+    };
+
+    // Check if the library is loaded
+    if (typeof easyWorker === 'undefined' || typeof easyWorker.createInlineWorker === 'undefined') {
+        outputLog('Easy Worker library not loaded. Please build it as easy-worker.browser.js and place it in ./dist/', 'error');
+        //throw new Error('Easy Worker library not loaded.');
+    } else {
+        outputLog('Easy Worker library loaded successfully.', 'success');
+        runTests();
+    }
+
+    async function runTests() {
+        const { createInlineWorker } = easyWorker;
+
+        // Test 1: Simple synchronous function
+        outputLog('--- Test 1: Simple synchronous function ---', 'info');
+        const add = (a, b) => {
+            console.log('[Worker-Add] Received:', a, b);
+            return a + b;
+        };
+        const workerAdd = createInlineWorker(add);
+        try {
+            const sum = await workerAdd(5, 10);
+            outputLog(`Test 1 Sum: ${sum}`, 'success');
+        } catch (err) {
+            outputLog(`Test 1 Error: ${err.message}`, 'error');
+            console.error(err);
+        } finally {
+            workerAdd.terminate();
+            outputLog('Test 1 Worker terminated.', 'info');
+        }
+
+        // Test 2: Function with a working dependency (Lodash)
+        outputLog('--- Test 2: Function with a working dependency (Lodash) ---', 'info');
+        const checkLodash = () => {
+            // This code runs inside the worker
+            console.log('[Worker-Lodash] Checking for lodash (_). typeof _ is:', typeof _);
+            if (typeof _ === 'function') {
+                return `Lodash (version ${_.VERSION}) loaded successfully!`;
+            }
+            return 'Lodash (_) was not found or not a function.';
+        };
+        const lodashWorker = createInlineWorker(checkLodash, {
+            dependencies: ['https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js']
+        });
+        try {
+            const lodashResult = await lodashWorker();
+            outputLog(`Test 2 Lodash Check: ${lodashResult}`, 'success');
+        } catch (err) {
+            outputLog(`Test 2 Error: ${err.message}`, 'error');
+            console.error(err);
+        } finally {
+            lodashWorker.terminate();
+            outputLog('Test 2 Worker terminated.', 'info');
+        }
+
+        // Test 3: Function with a failing dependency (non-existent script)
+        outputLog('--- Test 3: Function with a failing dependency ---', 'info');
+        const failingDepFn = () => {
+            // This code might not even run if importScripts fails critically
+            console.log('[Worker-FailingDep] Worker started. This might not appear if init fails.');
+            return 'Worker started, but dependency should have failed.';
+        };
+        // Expecting this worker to fail during initialization due to the bad dependency URL.
+        // The error should be caught by createInlineWorker's internal error handling for importScripts.
+        const failingDepWorker = createInlineWorker(failingDepFn, {
+            dependencies: ['https://example.com/non-existent-script-12345.js']
+        });
+        try {
+            const failingResult = await failingDepWorker(); // This call should reject
+            outputLog(`Test 3 Result (should not reach here for result): ${failingResult}`, 'error');
+        } catch (err) {
+            // We expect an error here related to 'worker-init-error' or 'ImportScriptsError'
+            outputLog(`Test 3 Caught Expected Error: ${err.name} - ${err.message}`, 'success');
+            console.log("Test 3 Full Error Object:", err);
+        } finally {
+            // Terminate might not be necessary if worker never fully initialized or already auto-terminated due to fatal error
+            // but calling it is good practice if the worker instance exists.
+            if (failingDepWorker && typeof failingDepWorker.terminate === 'function') {
+                failingDepWorker.terminate();
+            }
+            outputLog('Test 3 Worker (attempted) termination.', 'info');
+        }
+
+        // Test 4: Async function in worker
+        outputLog('--- Test 4: Async function ---', 'info');
+        const asyncSleep = async (ms) => {
+            console.log(`[Worker-Async] Sleeping for ${ms}ms...`);
+            await new Promise(resolve => setTimeout(resolve, ms));
+            console.log('[Worker-Async] Slept.');
+            return `Slept for ${ms}ms in worker.`;
+        };
+        const asyncWorker = createInlineWorker(asyncSleep);
+        try {
+            const sleepResult = await asyncWorker(100); // Short sleep
+            outputLog(`Test 4 Async Result: ${sleepResult}`, 'success');
+        } catch (err) {
+            outputLog(`Test 4 Error: ${err.message}`, 'error');
+            console.error(err);
+        } finally {
+            asyncWorker.terminate();
+            outputLog('Test 4 Worker terminated.', 'info');
+        }
+
+        // Test 5: Worker that throws an error internally
+        outputLog('--- Test 5: Worker function throws an error ---', 'info');
+        const errorThrowingFn = () => {
+            console.log('[Worker-ErrorThrow] About to throw an error.');
+            throw new Error("Intentional error from worker function!");
+        };
+        const errorWorker = createInlineWorker(errorThrowingFn);
+        try {
+            await errorWorker();
+            outputLog('Test 5 (should not reach here)', 'error');
+        } catch (err) {
+            outputLog(`Test 5 Caught Expected Error: ${err.name} - ${err.message}`, 'success');
+            console.error(err);
+        } finally {
+            errorWorker.terminate();
+            outputLog('Test 5 Worker terminated.', 'info');
+        }
+
+        outputLog('--- All Tests Completed ---', 'info');
+    }
+</script>
+</body>
+</html>
