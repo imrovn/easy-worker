@@ -2,10 +2,10 @@
   "name": "easy-worker",
   "version": "0.1.0",
   "description": "A lightweight library to create Web Workers from inline functions without needing a separate file, with TypeScript support.",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "src/index.ts",
-  "type": "module",
   "files": [
     "dist",
     "README.md",
@@ -13,11 +13,15 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified yet\" && exit 0",
-    "lint": "echo \"Error: no linter specified yet\" && exit 0",
     "prepare": "npm run build",
-    "run-example": "bun run examples/another.ts",
-    "build:browser": "esbuild src/index.ts --bundle --outfile=dist/easy-worker.browser.js --format=iife --global-name=easyWorker"
+    "run-example": "bun run examples/01-basic-execution.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "clean": "rimraf dist",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write ."
   },
   "keywords": [
     "web worker",
@@ -38,8 +42,17 @@
     "url": "https://github.com/imrovn/easy-worker/issues"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/bun": "latest",
-    "esbuild": "^0.25.4"
+    "@vitest/ui": "^3.1.3",
+    "esbuild": "^0.25.4",
+    "eslint-config-prettier": "^10.1.3",
+    "eslint-plugin-prettier": "^5.4.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.3.2",
+    "vitest": "^3.1.3"
   },
   "peerDependencies": {
     "typescript": "^5"
