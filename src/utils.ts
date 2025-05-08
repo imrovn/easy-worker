@@ -6,5 +6,5 @@ let messageIdCounter = 0;
  * @returns {string} A unique ID string.
  */
 export function getNextMessageId(): string {
-    return `easy-worker-msg-${messageIdCounter++}`;
+  return `easy-worker-msg-${messageIdCounter++}`;
 }

@@ -1,6 +1,9 @@
+import { createInlineWorker as _createInlineWorker } from './inline-worker.js';
+import type {
+  CreateInlineWorkerOptions as _CreateInlineWorkerOptions,
+  InlineWorker as _InlineWorker,
+} from './types.js';
 
-import { createInlineWorker as _createInlineWorker } from './inline-worker';
-import type { CreateInlineWorkerOptions as _CreateInlineWorkerOptions, InlineWorker as _InlineWorker } from './types';
 export type CreateInlineWorkerOptions = _CreateInlineWorkerOptions;
 export type InlineWorker<TFunc extends (...args: any[]) => any> = _InlineWorker<TFunc>;
 
@@ -18,16 +21,7 @@ export type InlineWorker<TFunc extends (...args: any[]) => any> = _InlineWorker<
  * function's string representation, or globally available in a worker context
  * (e.g., `Math`, `JSON`), or imported via the `dependencies` option.
  * Pass all dynamic data as arguments to the function.
- * - **Supported Forms**:
- * - Arrow functions: `(a, b) => a + b`
- * - Function expressions: `function(a, b) { return a + b; }`
- * - Function declarations stringified: `function myFunc(a, b) { return a + b; }`
- * - **Object Method Shorthands**: Directly passing object method shorthands
- * (e.g., `myMethod() {}` from `const obj = { myMethod() {} }`) might not serialize
- * correctly for direct execution due to how `toString()` works on them.
- * Consider wrapping them: `(...args) => obj.myMethod(...args)` (but note `obj` itself
- * won't be available in the worker unless passed or reconstructed), or define them
- * as standard function expressions.
+
  * - **`this` Context**: Inside the worker function, `this` will refer to the
  * worker's global scope (`self`) or be `undefined` if the function is in strict mode.
  * @param {CreateInlineWorkerOptions} [options] Configuration options for the worker.

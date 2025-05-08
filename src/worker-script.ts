@@ -5,22 +5,17 @@
  * @param {string[]} [dependencies] Optional array of script URLs for importScripts.
  * @returns {string} The complete worker script as a string.
  */
-export function generateWorkerBootstrapScript(
-    funcString: string,
-    dependencies?: string[]
-): string {
-    const dependencyImportScript =
-        dependencies && dependencies.length > 0
-            ? `try { importScripts(${dependencies.map((dep) => `'${dep}'`).toString()}); } catch (e) { self.postMessage({ id: 'worker-init-error', error: { name: 'ImportScriptsError', message: 'Failed to load dependencies: ' + e.message, stack: e.stack }}); throw e; };`
-            : '';
+export function generateWorkerBootstrapScript(funcString: string, dependencies?: string[]): string {
+  const dependencyImportScript =
+    dependencies && dependencies.length > 0
+      ? `try { importScripts(${dependencies.map((dep) => `'${dep}'`).toString()}); } catch (e) { self.postMessage({ id: 'worker-init-error', error: { name: 'ImportScriptsError', message: 'Failed to load dependencies: ' + e.message, stack: e.stack }}); throw e; };`
+      : '';
 
-    let scriptContent = `
+  let scriptContent = `
     ${dependencyImportScript}
 
     let userFunction;
     try {
-      // This attempts to evaluate the stringified function.
-      // It works well for arrow functions, function expressions, and function declarations.
       userFunction = (${funcString});
     } catch (e) {
        const errMessage = 'Failed to initialize user function in worker. ' +
@@ -29,11 +24,9 @@ export function generateWorkerBootstrapScript(
        self.postMessage({ id: 'worker-init-error', error: { name: 'FunctionInitializationError', message: errMessage, stack: e.stack }});
        throw new Error(errMessage);
     }
-    console.log("finished userFunction")
     self.onmessage = async (event) => {
       const { id, args } = event.data;
       if (id === undefined || !Array.isArray(args)) {
-        // Using console.warn for internal worker issues not tied to a specific promise
         console.warn('easy-worker: Worker received malformed message:', event.data);
         return;
       }
@@ -41,11 +34,9 @@ export function generateWorkerBootstrapScript(
         if (typeof userFunction !== 'function') {
           throw new Error('User function could not be initialized or is not a function in the worker.');
         }
-    console.log(id, args);
         const result = await userFunction(...args);
         self.postMessage({ id, result });
       } catch (e) {
-        // Serialize error before posting
         let serializableError = { name: 'Error', message: 'An unknown error occurred in the worker.' , stack: undefined };
         if (e instanceof Error) {
             serializableError = { name: e.name, message: e.message, stack: e.stack };
@@ -62,5 +53,5 @@ export function generateWorkerBootstrapScript(
       }
     };
   `;
-    return scriptContent.trim();
+  return scriptContent.trim();
 }
