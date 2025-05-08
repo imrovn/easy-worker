@@ -1,0 +1,47 @@
+{
+  "name": "easy-worker",
+  "version": "0.1.0",
+  "description": "A lightweight library to create Web Workers from inline functions without needing a separate file, with TypeScript support.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "src/index.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified yet\" && exit 0",
+    "lint": "echo \"Error: no linter specified yet\" && exit 0",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "web worker",
+    "worker",
+    "inline worker",
+    "typescript",
+    "async",
+    "background",
+    "thread"
+  ],
+  "author": "Ro Vo Ngoc <ngocro208@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imrovn/easy-worker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/imrovn/easy-worker/issues"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
